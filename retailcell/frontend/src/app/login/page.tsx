@@ -67,7 +67,13 @@ export default function LoginPage() {
         gsm_number: regGsm,
         email: regEmail
       };
-      await identityApi.registerCustomer(payload);
+      const response = await identityApi.registerCustomer(payload);
+      
+      if (!response) {
+        setError("Kayıt başarısız oldu. Lütfen bilgilerinizi kontrol ediniz (Örn: Bu numara kullanılıyor olabilir).");
+        setLoading(false);
+        return;
+      }
       
       setIsRegisterMode(false);
       setGsmNumber(regGsm);
@@ -93,7 +99,13 @@ export default function LoginPage() {
         region: "Genel Merkez",
         specialties: ["Genel"]
       };
-      await identityApi.registerStaff(payload);
+      const response = await identityApi.registerStaff(payload);
+
+      if (!response) {
+        setError("Kayıt başarısız oldu. E-posta sistemde kayıtlı olabilir veya Şifreniz kurallara uymuyor olabilir (En az 8 karakter, 1 büyük harf, 1 rakam, 1 özel karakter içermelidir).");
+        setLoading(false);
+        return;
+      }
       
       setIsStaffRegisterMode(false);
       setEmail(regEmail);
