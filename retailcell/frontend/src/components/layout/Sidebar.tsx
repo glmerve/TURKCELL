@@ -32,7 +32,7 @@ export default function Sidebar() {
   return (
     <>
       <aside
-        className={`fixed left-0 top-0 h-screen bg-rc-bg-sidebar border-r border-rc-border flex flex-col z-40 transition-all duration-300 ${
+        className={`fixed left-0 top-0 h-screen bg-rc-bg-sidebar border-r border-rc-border flex flex-col z-30 transition-all duration-300 ${
           collapsed ? "w-[72px]" : "w-[240px]"
         }`}
       >
@@ -71,8 +71,9 @@ export default function Sidebar() {
         {/* New Request Button */}
         <div className="px-3 py-3">
           <button
+            type="button"
             onClick={() => setIsModalOpen(true)}
-            className={`rc-btn-primary w-full flex items-center justify-center gap-2 ${collapsed ? "!px-2" : ""}`}
+            className={`rc-btn-primary w-full flex items-center justify-center gap-2 cursor-pointer relative z-40 ${collapsed ? "!px-2" : ""}`}
           >
             <Plus size={16} />
             {!collapsed && <span>Yeni Talep</span>}
@@ -89,6 +90,7 @@ export default function Sidebar() {
               {!collapsed && <span className="text-sm">Profil</span>}
             </Link>
             <button
+              type="button"
               onClick={() => setCollapsed(!collapsed)}
               className="text-rc-text-muted hover:text-white p-1 transition-colors"
             >
