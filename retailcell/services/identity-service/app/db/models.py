@@ -4,7 +4,7 @@ RetailCell Identity Service - SQLAlchemy ORM Models
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import (
-    String, Boolean, DateTime, JSON, Enum, Index, Text
+    String, Boolean, DateTime, JSON, Enum, Index, Text, Integer
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
@@ -16,6 +16,10 @@ class UserRole(str, enum.Enum):
     MANAGER = "MANAGER"
     VIEWER = "VIEWER"
     DEALER = "DEALER"
+    ANALYST = "ANALYST"
+    EXPERT = "EXPERT"
+    OPERATOR = "OPERATOR"
+    SUPERVISOR = "SUPERVISOR"
 
 
 class UserStatus(str, enum.Enum):
@@ -24,15 +28,30 @@ class UserStatus(str, enum.Enum):
     SUSPENDED = "SUSPENDED"
 
 
+class AccountType(str, enum.Enum):
+    CUSTOMER = "CUSTOMER"
+    STAFF = "STAFF"
+
+
 class User(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(
         String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
-    username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    account_type: Mapped[AccountType] = mapped_column(
+        Enum(AccountType), default=AccountType.STAFF, nullable=False
+    )
+    
+    # Customer specific
+    gsm_number: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True, index=True)
+    
+    # Staff specific
+    email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True, index=True)
+    username: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True, index=True)
+    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    
+    # Common
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole), default=UserRole.VIEWER, nullable=False
@@ -44,6 +63,14 @@ class User(Base):
     region: Mapped[str | None] = mapped_column(String(100), nullable=True)
     dealer_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    
+    # Staff Specialties (JSON array)
+    specialties: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    
+    # Security & Rate Limiting
+    failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
