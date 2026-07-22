@@ -14,6 +14,7 @@ export default function LoginPage() {
   
   // Forms State
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [isStaffRegisterMode, setIsStaffRegisterMode] = useState(false);
   const [regFullName, setRegFullName] = useState("");
   const [regGsm, setRegGsm] = useState("");
   const [regEmail, setRegEmail] = useState("");
@@ -34,6 +35,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      if (otp !== "1234") {
+        setError("Hatalı OTP kodu girdiniz. (Simülasyon için: 1234)");
+        setLoading(false);
+        return;
+      }
+
       const response: any = await identityApi.loginCustomer(gsmNumber, otp);
       if (response && response.access_token) {
         localStorage.setItem("rc_token", response.access_token);
@@ -282,6 +289,92 @@ export default function LoginPage() {
 
           {/* STAFF TAB */}
           {activeTab === "STAFF" && (
+            isStaffRegisterMode ? (
+              <form onSubmit={handleStaffRegister} className="space-y-4 animate-fade-in">
+                <div>
+                  <label className="text-xs font-medium text-rc-text-secondary block mb-1">Kayıt Olunacak Rol</label>
+                  <div className="flex flex-wrap gap-2 justify-center mb-4">
+                    {[
+                      { id: "ADMIN", label: "Yönetici" },
+                      { id: "MANAGER", label: "Sorumlu" },
+                      { id: "EXPERT", label: "Uzman" },
+                      { id: "ANALYST", label: "Analist" },
+                      { id: "OPERATOR", label: "Operatör" }
+                    ].map((r) => (
+                      <button
+                        type="button"
+                        key={r.id}
+                        onClick={() => setStaffRole(r.id)}
+                        className={`px-3 py-1.5 text-[10px] font-bold rounded-full transition-all border ${
+                          staffRole === r.id
+                            ? "bg-rc-gold text-black border-rc-gold shadow-[0_0_10px_rgba(255,215,0,0.3)]"
+                            : "bg-rc-bg-primary text-rc-text-secondary border-rc-border hover:text-white"
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-rc-text-secondary block mb-1">Ad Soyad</label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-rc-text-muted" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ahmet Yılmaz"
+                      value={regFullName}
+                      onChange={(e) => setRegFullName(e.target.value)}
+                      className="w-full bg-rc-bg-primary border border-rc-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-rc-gold"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-rc-text-secondary block mb-1">Kurumsal E-Posta</label>
+                  <div className="relative">
+                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-rc-text-muted" />
+                    <input
+                      type="email"
+                      required
+                      placeholder="ahmet@retailcell.com"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      className="w-full bg-rc-bg-primary border border-rc-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-rc-gold"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-rc-text-secondary block mb-1">Şifre Belirleyin</label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-rc-text-muted" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-rc-bg-primary border border-rc-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-rc-gold"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="rc-btn-primary w-full !py-3 !rounded-xl font-bold flex items-center justify-center gap-2 mt-2"
+                >
+                  {loading ? "Kaydediliyor..." : "Personel Hesabı Oluştur"}
+                </button>
+                <div className="text-center mt-3">
+                  <p className="text-xs text-rc-text-muted">
+                    Zaten personel misiniz?{" "}
+                    <button type="button" onClick={() => { setIsStaffRegisterMode(false); setError(null); }} className="text-rc-gold hover:underline">
+                      Giriş Yapın
+                    </button>
+                  </p>
+                </div>
+              </form>
+            ) : (
             <div className="animate-fade-in space-y-4">
               <div className="flex flex-wrap gap-2 justify-center mb-6">
                 {[
@@ -347,6 +440,15 @@ export default function LoginPage() {
                 {!loading && !lockedTime && <ShieldAlert size={16} />}
               </button>
             </form>
+
+            <div className="text-center mt-4 pt-4 border-t border-rc-border">
+              <p className="text-xs text-rc-text-muted">
+                Kurumsal hesabınız yok mu?{" "}
+                <button type="button" onClick={() => { setIsStaffRegisterMode(true); setError(null); }} className="text-rc-gold hover:underline">
+                  Personel Kaydı Oluşturun
+                </button>
+              </p>
+            </div>
           </div>
           )}
         </div>
