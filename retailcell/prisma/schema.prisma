@@ -1,0 +1,356 @@
+// ============================================
+// RetailCell - Prisma Database Schema
+// Tüm mikroservislerin veritabanı modellerini tanımlar
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_SYNC")
+}
+
+// ============================================
+// Identity Service Models
+// ============================================
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  VIEWER
+  DEALER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  id             String      @id @default(uuid())
+  email          String      @unique
+  username       String      @unique
+  hashedPassword String      @map("hashed_password")
+  fullName       String      @map("full_name")
+  role           UserRole    @default(VIEWER)
+  status         UserStatus  @default(ACTIVE)
+  phone          String?
+  region         String?
+  dealerId       String?     @map("dealer_id")
+  avatarUrl      String?     @map("avatar_url")
+  lastLoginAt    DateTime?   @map("last_login_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  auditLogs        AuditLog[]
+  supplyRequests   SupplyRequest[]
+  sentMessages     Message[]        @relation("SentMessages")
+  receivedMessages Message[]        @relation("ReceivedMessages")
+  userBadges       UserBadge[]
+  points           PointTransaction[]
+
+  @@map("users")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  details    Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// Inventory Service Models
+// ============================================
+
+enum ProductCategory {
+  PHONE
+  TABLET
+  ACCESSORY
+  SIM_CARD
+  MODEM
+  SMART_WATCH
+  OTHER
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  DISCONTINUED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Product {
+  id              String          @id @default(uuid())
+  name            String
+  sku             String          @unique
+  category        ProductCategory
+  description     String?
+  price           Decimal         @db.Decimal(10, 2)
+  stockQuantity   Int             @default(0) @map("stock_quantity")
+  reorderLevel    Int             @default(10) @map("reorder_level")
+  reorderQuantity Int             @default(50) @map("reorder_quantity")
+  status          StockStatus     @default(IN_STOCK)
+  riskLevel       RiskLevel       @default(LOW) @map("risk_level")
+  region          String?
+  dealerId        String?         @map("dealer_id")
+  imageUrl        String?         @map("image_url")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  supplyRequestItems SupplyRequestItem[]
+  forecasts          AIForecast[]
+
+  @@index([category])
+  @@index([status])
+  @@index([region])
+  @@map("products")
+}
+
+enum SupplyRequestStatus {
+  CREATED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum Priority {
+  P0
+  P1
+  P2
+  P3
+}
+
+model SupplyRequest {
+  id              String              @id @default(uuid())
+  requestNumber   String              @unique @map("request_number")
+  requesterId     String              @map("requester_id")
+  title           String
+  description     String?
+  status          SupplyRequestStatus @default(CREATED)
+  priority        Priority            @default(P2)
+  region          String?
+  dealerName      String?             @map("dealer_name")
+  slaDeadline     DateTime?           @map("sla_deadline")
+  slaBreached     Boolean             @default(false) @map("sla_breached")
+  approvedBy      String?             @map("approved_by")
+  approvedAt      DateTime?           @map("approved_at")
+  shippedAt       DateTime?           @map("shipped_at")
+  deliveredAt     DateTime?           @map("delivered_at")
+  notes           String?
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  requester User                @relation(fields: [requesterId], references: [id])
+  items     SupplyRequestItem[]
+  cases     Case[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([requesterId])
+  @@index([region])
+  @@map("supply_requests")
+}
+
+model SupplyRequestItem {
+  id              String @id @default(uuid())
+  supplyRequestId String @map("supply_request_id")
+  productId       String @map("product_id")
+  quantity        Int
+  unitPrice       Decimal @db.Decimal(10, 2) @map("unit_price")
+
+  // Relations
+  supplyRequest SupplyRequest @relation(fields: [supplyRequestId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id])
+
+  @@map("supply_request_items")
+}
+
+enum CaseStatus {
+  OPEN
+  IN_PROGRESS
+  ESCALATED
+  RESOLVED
+  CLOSED
+}
+
+model Case {
+  id              String     @id @default(uuid())
+  caseNumber      String     @unique @map("case_number")
+  supplyRequestId String?    @map("supply_request_id")
+  title           String
+  description     String?
+  status          CaseStatus @default(OPEN)
+  priority        Priority   @default(P2)
+  region          String?
+  assignedTo      String?    @map("assigned_to")
+  resolvedAt      DateTime?  @map("resolved_at")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  supplyRequest SupplyRequest? @relation(fields: [supplyRequestId], references: [id])
+
+  @@index([status])
+  @@index([region])
+  @@map("cases")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String   @map("sender_id")
+  receiverId String   @map("receiver_id")
+  subject    String?
+  content    String
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([receiverId, isRead])
+  @@map("messages")
+}
+
+// ============================================
+// AI Service Models
+// ============================================
+
+model AIForecast {
+  id               String   @id @default(uuid())
+  productId        String   @map("product_id")
+  forecastDate     DateTime @map("forecast_date")
+  predictedDemand  Float    @map("predicted_demand")
+  actualDemand     Float?   @map("actual_demand")
+  confidenceLower  Float?   @map("confidence_lower")
+  confidenceUpper  Float?   @map("confidence_upper")
+  riskLevel        RiskLevel @default(LOW) @map("risk_level")
+  riskScore        Float?   @map("risk_score")
+  modelVersion     String?  @map("model_version")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId, forecastDate])
+  @@map("ai_forecasts")
+}
+
+model ModelMetrics {
+  id            String   @id @default(uuid())
+  modelName     String   @map("model_name")
+  modelVersion  String   @map("model_version")
+  r2Score       Float?   @map("r2_score")
+  maeScore      Float?   @map("mae_score")
+  rmseScore     Float?   @map("rmse_score")
+  accuracy      Float?
+  precision_val Float?   @map("precision_val")
+  recall        Float?
+  f1Score       Float?   @map("f1_score")
+  trainedAt     DateTime @default(now()) @map("trained_at")
+  trainingRows  Int?     @map("training_rows")
+  features      Json?
+
+  @@map("model_metrics")
+}
+
+// ============================================
+// Gamification Service Models
+// ============================================
+
+enum BadgeCategory {
+  SLA
+  DELIVERY
+  STOCK
+  PERFORMANCE
+  SPECIAL
+}
+
+model Badge {
+  id          String        @id @default(uuid())
+  name        String        @unique
+  displayName String        @map("display_name")
+  description String
+  category    BadgeCategory
+  iconUrl     String?       @map("icon_url")
+  criteria    Json
+  points      Int           @default(0)
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  badgeId   String   @map("badge_id")
+  earnedAt  DateTime @default(now()) @map("earned_at")
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model PointTransaction {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  points      Int
+  reason      String
+  referenceId String?  @map("reference_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("point_transactions")
+}
+
+model LeaderboardEntry {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  totalPoints Int      @default(0) @map("total_points")
+  badgeCount  Int      @default(0) @map("badge_count")
+  rank        Int?
+  region      String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([totalPoints(sort: Desc)])
+  @@map("leaderboard_entries")
+}
