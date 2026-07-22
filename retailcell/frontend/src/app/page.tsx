@@ -1,14 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import MetricCard from "@/components/ui/MetricCard";
+import NewSupplyRequestModal from "@/components/modals/NewSupplyRequestModal";
 import {
   Building2, FileBox, AlertTriangle, CheckSquare,
-  Brain, Clock, Warehouse, Truck
+  Brain, Clock, Warehouse, Truck, Download
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area
 } from "recharts";
 
@@ -26,7 +28,7 @@ const priorityData = [
   { name: "P3", value: 32, fill: "#22C55E" },
 ];
 
-const supplyRequests = [
+const initialRequests = [
   { id: "SR-001234", title: "iPhone 15 Pro Max Stok Talebi", dealer: "İstanbul - Kadıköy", priority: "P0", status: "İşleniyor", sla: "2.4 saat", date: "22 Tem 2025" },
   { id: "SR-001233", title: "Galaxy S24 Ultra Acil Sipariş", dealer: "Ankara - Kızılay", priority: "P1", status: "Onay Bekliyor", sla: "8.1 saat", date: "22 Tem 2025" },
   { id: "SR-001232", title: "Airpods Pro 2 Yeniden Sipariş", dealer: "İzmir - Alsancak", priority: "P2", status: "Kargoda", sla: "24.5 saat", date: "21 Tem 2025" },
@@ -60,6 +62,14 @@ const priorityColors: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [exported, setExported] = useState(false);
+
+  const handleExport = () => {
+    setExported(true);
+    setTimeout(() => setExported(false), 2000);
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
@@ -216,10 +226,17 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-white">Tedarik Talepleri</h3>
             <div className="flex items-center gap-2">
-              <button className="text-xs text-rc-text-secondary hover:text-white px-3 py-1.5 rounded-lg border border-rc-border transition-colors">
-                CSV Dışa Aktar
+              <button
+                onClick={handleExport}
+                className="text-xs text-rc-text-secondary hover:text-white px-3 py-1.5 rounded-lg border border-rc-border transition-colors flex items-center gap-1.5"
+              >
+                <Download size={14} />
+                {exported ? "İndirildi ✓" : "CSV Dışa Aktar"}
               </button>
-              <button className="rc-btn-primary !text-xs !py-1.5 !px-3">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="rc-btn-primary !text-xs !py-1.5 !px-3"
+              >
                 Yeni Talep
               </button>
             </div>
@@ -239,7 +256,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {supplyRequests.map((sr) => (
+                {initialRequests.map((sr) => (
                   <tr key={sr.id}>
                     <td className="font-mono text-rc-gold text-xs">{sr.id}</td>
                     <td className="text-white font-medium">{sr.title}</td>
@@ -255,6 +272,8 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      <NewSupplyRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </MainLayout>
   );
 }

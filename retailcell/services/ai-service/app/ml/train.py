@@ -86,14 +86,6 @@ def train_models(csv_path: str = None) -> dict:
         "f1_score": round(f1_score(y_test_r, y_pred_r, average="weighted", zero_division=0), 4),
     }
 
-    print("\n📊 Demand Forecasting Metrics:")
-    for k, v in demand_metrics.items():
-        print(f"  {k}: {v}")
-
-    print("\n📊 Risk Classification Metrics:")
-    for k, v in risk_metrics.items():
-        print(f"  {k}: {v}")
-
     report = classification_report(
         y_test_r, y_pred_r,
         target_names=le_risk.classes_,
@@ -119,7 +111,6 @@ def train_models(csv_path: str = None) -> dict:
     with open(model_path, "wb") as f:
         pickle.dump(model_bundle, f)
 
-    print(f"\n✅ Models saved to {model_path}")
     return model_bundle
 
 

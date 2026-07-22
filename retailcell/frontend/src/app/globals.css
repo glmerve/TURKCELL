@@ -25,18 +25,15 @@
   --color-rc-info: #3B82F6;
 }
 
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 html {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background-color: var(--color-rc-bg-primary);
-  color: var(--color-rc-text-primary);
+  background-color: #0D0F12;
+  color: #FFFFFF;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -48,16 +45,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-rc-bg-secondary);
+  background: #1A1D23;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-rc-border-light);
+  background: #353840;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-rc-text-muted);
+  background: #6B7280;
 }
 
 /* ---- Animations ---- */
@@ -76,11 +73,6 @@ body {
   50% { box-shadow: 0 0 0 8px rgba(245, 166, 35, 0); }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
@@ -95,22 +87,22 @@ body {
 
 /* ---- Card Styles ---- */
 .rc-card {
-  background: var(--color-rc-bg-card);
-  border: 1px solid var(--color-rc-border);
+  background: #1E2128;
+  border: 1px solid #2A2D35;
   border-radius: 12px;
   padding: 1.25rem;
   transition: all 0.2s ease;
 }
 
 .rc-card:hover {
-  border-color: var(--color-rc-border-light);
+  border-color: #353840;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* ---- Metric Card ---- */
 .rc-metric-card {
-  background: var(--color-rc-bg-card);
-  border: 1px solid var(--color-rc-border);
+  background: #1E2128;
+  border: 1px solid #2A2D35;
   border-radius: 12px;
   padding: 1rem 1.25rem;
   transition: all 0.25s ease;
@@ -125,14 +117,14 @@ body {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--color-rc-gold), var(--color-rc-gold-light));
+  background: linear-gradient(90deg, #F5A623, #FFBD4F);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
 
 .rc-metric-card:hover {
   transform: translateY(-2px);
-  border-color: var(--color-rc-gold);
+  border-color: #F5A623;
   box-shadow: 0 8px 24px rgba(245, 166, 35, 0.1);
 }
 
@@ -142,7 +134,7 @@ body {
 
 /* ---- Button Styles ---- */
 .rc-btn-primary {
-  background: linear-gradient(135deg, var(--color-rc-gold), var(--color-rc-gold-dark));
+  background: linear-gradient(135deg, #F5A623, #D4901E);
   color: #000;
   font-weight: 600;
   padding: 0.625rem 1.5rem;
@@ -164,20 +156,20 @@ body {
   gap: 0.75rem;
   padding: 0.625rem 1rem;
   border-radius: 8px;
-  color: var(--color-rc-text-secondary);
+  color: #A0A4AB;
   transition: all 0.2s ease;
   cursor: pointer;
   font-size: 0.875rem;
 }
 
 .rc-sidebar-item:hover {
-  background: var(--color-rc-bg-hover);
-  color: var(--color-rc-text-primary);
+  background: #252830;
+  color: #FFFFFF;
 }
 
 .rc-sidebar-item.active {
   background: rgba(245, 166, 35, 0.12);
-  color: var(--color-rc-gold);
+  color: #F5A623;
   font-weight: 500;
 }
 
@@ -189,15 +181,15 @@ body {
 }
 
 .rc-table thead th {
-  background: var(--color-rc-bg-secondary);
-  color: var(--color-rc-text-secondary);
+  background: #1A1D23;
+  color: #A0A4AB;
   font-weight: 500;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid var(--color-rc-border);
+  border-bottom: 1px solid #2A2D35;
 }
 
 .rc-table tbody tr {
@@ -205,14 +197,14 @@ body {
 }
 
 .rc-table tbody tr:hover {
-  background: var(--color-rc-bg-hover);
+  background: #252830;
 }
 
 .rc-table tbody td {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
-  border-bottom: 1px solid var(--color-rc-border);
-  color: var(--color-rc-text-secondary);
+  border-bottom: 1px solid #2A2D35;
+  color: #A0A4AB;
 }
 
 /* ---- Status Badges ---- */
@@ -248,5 +240,5 @@ body {
 
 .rc-badge-gold {
   background: rgba(245, 166, 35, 0.15);
-  color: var(--color-rc-gold);
+  color: #F5A623;
 }

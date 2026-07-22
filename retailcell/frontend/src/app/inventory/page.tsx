@@ -2,9 +2,10 @@
 
 import MainLayout from "@/components/layout/MainLayout";
 import { useState } from "react";
-import { Package, Search, Filter, Plus, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { Package, Search, Filter, Plus } from "lucide-react";
+import NewProductModal from "@/components/modals/NewProductModal";
 
-const mockProducts = [
+const initialProducts = [
   { id: "PROD-0001", name: "iPhone 15 Pro 128GB", sku: "APL-IP15P-128", category: "TELEFON", price: "49,999 TL", stock: 45, reorder: 15, status: "IN_STOCK", risk: "LOW", region: "Marmara" },
   { id: "PROD-0002", name: "Samsung Galaxy S24 Ultra", sku: "SMG-S24U-256", category: "TELEFON", price: "54,999 TL", stock: 8, reorder: 10, status: "LOW_STOCK", risk: "HIGH", region: "İç Anadolu" },
   { id: "PROD-0003", name: "iPad Air M2 11 inch", sku: "APL-IPDA-11", category: "TABLET", price: "24,999 TL", stock: 0, reorder: 5, status: "OUT_OF_STOCK", risk: "CRITICAL", region: "Ege" },
@@ -15,10 +16,16 @@ const mockProducts = [
 
 export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredProducts = mockProducts.filter(
-    (p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = initialProducts.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !selectedCategory || p.category === selectedCategory;
+    const matchesStatus = !selectedStatus || p.status === selectedStatus;
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   return (
     <MainLayout>
@@ -34,7 +41,10 @@ export default function InventoryPage() {
               Bayi stok seviyeleri, kritik stok uyarıları ve ürün kataloğu.
             </p>
           </div>
-          <button className="rc-btn-primary flex items-center justify-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="rc-btn-primary flex items-center justify-center gap-2 self-start sm:self-auto"
+          >
             <Plus size={16} />
             <span>Yeni Ürün Ekle</span>
           </button>
@@ -53,14 +63,23 @@ export default function InventoryPage() {
             />
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
-            <select className="bg-rc-bg-primary border border-rc-border text-rc-text-secondary text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-rc-gold">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-rc-bg-primary border border-rc-border text-rc-text-secondary text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-rc-gold cursor-pointer"
+            >
               <option value="">Tüm Kategoriler</option>
               <option value="TELEFON">Telefon</option>
               <option value="TABLET">Tablet</option>
               <option value="MODEM">Modem</option>
               <option value="AKILLI SAAT">Akıllı Saat</option>
+              <option value="SIM KART">SIM Kart</option>
             </select>
-            <select className="bg-rc-bg-primary border border-rc-border text-rc-text-secondary text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-rc-gold">
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-rc-bg-primary border border-rc-border text-rc-text-secondary text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-rc-gold cursor-pointer"
+            >
               <option value="">Tüm Durumlar</option>
               <option value="IN_STOCK">Stokta Var</option>
               <option value="LOW_STOCK">Kritik Stok</option>
@@ -118,6 +137,8 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+
+      <NewProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </MainLayout>
   );
 }

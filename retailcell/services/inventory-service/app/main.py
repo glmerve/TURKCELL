@@ -7,8 +7,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
-from app.db.database import init_db, close_db
-from app.db.redis_client import close_redis
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
@@ -18,12 +16,14 @@ logger = logging.getLogger(settings.SERVICE_NAME)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"🚀 {settings.SERVICE_NAME} başlatılıyor...")
-    await init_db()
+    try:
+        from app.db.database import init_db
+        await init_db()
+    except Exception as e:
+        logger.warning(f"⚠️ DB bağlantısı atlandı (Swagger Modu): {e}")
     logger.info(f"✅ {settings.SERVICE_NAME} hazır! Port: {settings.SERVICE_PORT}")
     yield
     logger.info(f"🛑 {settings.SERVICE_NAME} kapatılıyor...")
-    await close_redis()
-    await close_db()
 
 
 app = FastAPI(
