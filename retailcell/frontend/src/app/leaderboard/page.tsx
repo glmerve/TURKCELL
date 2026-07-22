@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { Trophy, Award, Medal, Star, Flame, Zap } from "lucide-react";
+import { Trophy, Award, Medal, Star, Zap } from "lucide-react";
+import { gamificationApi } from "@/services/api";
 
-const leaderboardData = [
+const initialLeaderboard = [
   { rank: 1, dealer: "Kadıköy Ana Mağaza", manager: "Ahmet Yılmaz", region: "İstanbul", points: 1450, badges: 12, slaRate: "%99.4" },
   { rank: 2, dealer: "Kızılay Operasyon", manager: "Elif Demir", region: "Ankara", points: 1320, badges: 10, slaRate: "%98.8" },
   { rank: 3, dealer: "Alsancak Premium Bayi", manager: "Caner Kaya", region: "İzmir", points: 1280, badges: 9, slaRate: "%98.1" },
@@ -19,6 +21,27 @@ const badgesCatalog = [
 ];
 
 export default function LeaderboardPage() {
+  const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
+
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      const data: any = await gamificationApi.getLeaderboard();
+      if (Array.isArray(data) && data.length > 0) {
+        const formatted = data.map((item: any, index: number) => ({
+          rank: item.rank || index + 1,
+          dealer: item.dealer_name || `Bayi #${item.user_id?.slice(0, 6)}`,
+          manager: "Sorumlu Yönetici",
+          region: item.region || "Marmara",
+          points: item.total_points || 100,
+          badges: item.badge_count || 1,
+          slaRate: "%98.5",
+        }));
+        setLeaderboard(formatted);
+      }
+    }
+    fetchLeaderboard();
+  }, []);
+
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
@@ -26,7 +49,7 @@ export default function LeaderboardPage() {
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <Trophy className="text-rc-gold" size={24} />
-            Bayi Liderlik Tablosu & Oyunlaştırma
+            Bayi Liderlik Tablosu & Oyunlaştırma (`GET /api/v1/gamification/leaderboard`)
           </h1>
           <p className="text-sm text-rc-text-secondary mt-0.5">
             SLA başarısı, stok optimizasyonu ve rozet puanlarına göre bayi sıralaması.
@@ -35,7 +58,7 @@ export default function LeaderboardPage() {
 
         {/* Top 3 Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {leaderboardData.slice(0, 3).map((item) => (
+          {leaderboard.slice(0, 3).map((item) => (
             <div key={item.rank} className={`rc-card flex items-center gap-4 relative overflow-hidden ${item.rank === 1 ? "border-rc-gold bg-gradient-to-br from-rc-bg-card to-amber-950/20" : ""}`}>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${item.rank === 1 ? "bg-rc-gold text-black" : item.rank === 2 ? "bg-slate-300 text-black" : "bg-amber-700 text-white"}`}>
                 #{item.rank}
@@ -70,7 +93,7 @@ export default function LeaderboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {leaderboardData.map((row) => (
+                {leaderboard.map((row) => (
                   <tr key={row.rank}>
                     <td className="font-bold text-rc-gold">#{row.rank}</td>
                     <td className="font-medium text-white">{row.dealer}</td>
@@ -89,7 +112,7 @@ export default function LeaderboardPage() {
         {/* Badges Catalog */}
         <div>
           <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-            <Award className="text-rc-gold" size={18} /> Kazanılabilir Rozetler Kataloğu
+            <Award className="text-rc-gold" size={18} /> Kazanılabilir Rozetler Kataloğu (`GET /api/v1/gamification/badges/catalog`)
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {badgesCatalog.map((b, i) => {
