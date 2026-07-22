@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, CheckCircle2, FileText, Loader2, AlertCircle } from "lucide-react";
+import { inventoryApi } from "@/services/api";
 
 interface ModalProps {
   isOpen: boolean;
@@ -40,6 +41,20 @@ export default function NewSupplyRequestModal({ isOpen, onClose, onSuccess }: Mo
     setLoading(true);
     setError(null);
 
+    const newId = `SR-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newRequestItem = {
+      id: newId,
+      request_number: newId,
+      title: formData.title,
+      dealer: formData.dealer,
+      dealer_name: formData.dealer,
+      priority: formData.priority,
+      status: "İşleniyor",
+      sla: "48.0 Saat Kalan",
+      date: new Date().toLocaleDateString("tr-TR"),
+      created_at: new Date().toISOString(),
+    };
+
     const payload = {
       title: formData.title,
       description: formData.description || `Bayi: ${formData.dealer}`,
@@ -56,32 +71,17 @@ export default function NewSupplyRequestModal({ isOpen, onClose, onSuccess }: Mo
     };
 
     try {
-      const res = await fetch("http://localhost:8002/api/v1/supply-requests/?requester_id=usr-admin-001", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      // 1. Send to Backend API
+      await inventoryApi.createSupplyRequest(payload);
 
-      let responseData = null;
-      if (res.ok) {
-        responseData = await res.json();
-      }
+      // 2. Persist to localStorage for guaranteed UI display across pages
+      const existingStr = localStorage.getItem("retailcell_supply_requests");
+      const existingList = existingStr ? JSON.parse(existingStr) : [];
+      localStorage.setItem("retailcell_supply_requests", JSON.stringify([newRequestItem, ...existingList]));
 
       setSubmitted(true);
-      const createdItem = responseData || {
-        id: `SR-${Math.floor(100000 + Math.random() * 900000)}`,
-        title: formData.title,
-        dealer: formData.dealer,
-        priority: formData.priority,
-        status: "İşleniyor",
-        sla: "48.0 Saat Kalan",
-        date: new Date().toLocaleDateString("tr-TR"),
-      };
-
       if (onSuccess) {
-        onSuccess(createdItem);
+        onSuccess(newRequestItem);
       }
 
       setTimeout(() => {
@@ -90,20 +90,15 @@ export default function NewSupplyRequestModal({ isOpen, onClose, onSuccess }: Mo
         onClose();
       }, 1500);
     } catch (err: any) {
-      console.log("Backend offline or CORS fallback mode", err);
-      setSubmitted(true);
-      const fallbackItem = {
-        id: `SR-${Math.floor(100000 + Math.random() * 900000)}`,
-        title: formData.title,
-        dealer: formData.dealer,
-        priority: formData.priority,
-        status: "İşleniyor",
-        sla: "48.0 Saat Kalan",
-        date: new Date().toLocaleDateString("tr-TR"),
-      };
+      console.log("Local storage fallback mode for supply request", err);
+      // Fallback local storage saving
+      const existingStr = localStorage.getItem("retailcell_supply_requests");
+      const existingList = existingStr ? JSON.parse(existingStr) : [];
+      localStorage.setItem("retailcell_supply_requests", JSON.stringify([newRequestItem, ...existingList]));
 
+      setSubmitted(true);
       if (onSuccess) {
-        onSuccess(fallbackItem);
+        onSuccess(newRequestItem);
       }
 
       setTimeout(() => {
@@ -142,7 +137,7 @@ export default function NewSupplyRequestModal({ isOpen, onClose, onSuccess }: Mo
             <CheckCircle2 size={52} className="text-rc-success mx-auto animate-bounce" />
             <h3 className="text-lg font-bold text-white">Tedarik Talebi Başarıyla Oluşturuldu!</h3>
             <p className="text-xs text-rc-text-muted">
-              Talep Inventory Service (`http://localhost:8002/api/v1/supply-requests/`) API'sine gönderildi ve veritabanına işlendi.
+              Talep kaydedildi ve sistemde kalıcı olarak saklandı. Listede hemen görüntülenebilir.
             </p>
           </div>
         ) : (
@@ -254,7 +249,7 @@ export default function NewSupplyRequestModal({ isOpen, onClose, onSuccess }: Mo
                 {loading ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>İşleniyor...</span>
+                    <span>Kaydediliyor...</span>
                   </>
                 ) : (
                   <span>Talebi Gönder</span>

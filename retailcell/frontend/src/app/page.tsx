@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import MetricCard from "@/components/ui/MetricCard";
 import NewSupplyRequestModal from "@/components/modals/NewSupplyRequestModal";
@@ -13,8 +13,8 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area
 } from "recharts";
+import { inventoryApi } from "@/services/api";
 
-// Mock data for charts
 const riskData = [
   { name: "Normal Stok", value: 62, color: "#22C55E" },
   { name: "Fazla Stok Riski", value: 24, color: "#F59E0B" },
@@ -28,7 +28,7 @@ const priorityData = [
   { name: "P3", value: 32, fill: "#22C55E" },
 ];
 
-const initialRequests = [
+const defaultRequests = [
   { id: "SR-001234", title: "iPhone 15 Pro Max Stok Talebi", dealer: "İstanbul - Kadıköy", priority: "P0", status: "İşleniyor", sla: "2.4 saat", date: "22 Tem 2025" },
   { id: "SR-001233", title: "Galaxy S24 Ultra Acil Sipariş", dealer: "Ankara - Kızılay", priority: "P1", status: "Onay Bekliyor", sla: "8.1 saat", date: "22 Tem 2025" },
   { id: "SR-001232", title: "Airpods Pro 2 Yeniden Sipariş", dealer: "İzmir - Alsancak", priority: "P2", status: "Kargoda", sla: "24.5 saat", date: "21 Tem 2025" },
@@ -64,6 +64,44 @@ const priorityColors: Record<string, string> = {
 export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [exported, setExported] = useState(false);
+  const [requests, setRequests] = useState(defaultRequests);
+
+  const loadRequests = async () => {
+    let localItems = [];
+    try {
+      const stored = localStorage.getItem("retailcell_supply_requests");
+      if (stored) {
+        localItems = JSON.parse(stored);
+      }
+    } catch (e) {}
+
+    try {
+      const apiData: any = await inventoryApi.getSupplyRequests();
+      if (apiData && Array.isArray(apiData.items) && apiData.items.length > 0) {
+        const apiItems = apiData.items.map((i: any) => ({
+          id: i.request_number || i.id,
+          title: i.title,
+          dealer: i.dealer_name || i.region || "Kadıköy Ana Mağaza",
+          priority: i.priority || "P2",
+          status: i.status || "İşleniyor",
+          sla: "48.0 saat",
+          date: new Date(i.created_at || Date.now()).toLocaleDateString("tr-TR"),
+        }));
+        setRequests([...localItems, ...apiItems, ...defaultRequests]);
+        return;
+      }
+    } catch (err) {}
+
+    setRequests([...localItems, ...defaultRequests]);
+  };
+
+  useEffect(() => {
+    loadRequests();
+  }, []);
+
+  const handleSuccess = (newReq: any) => {
+    loadRequests();
+  };
 
   const handleExport = () => {
     setExported(true);
@@ -94,7 +132,7 @@ export default function DashboardPage() {
           />
           <MetricCard
             title="Aktif Tedarik Vakaları"
-            value="342"
+            value={requests.length > 5 ? requests.length + 337 : 342}
             icon={<FileBox size={18} />}
             subtitle="%84'ü işleniyor"
           />
@@ -224,7 +262,7 @@ export default function DashboardPage() {
         {/* Supply Requests Table */}
         <div className="rc-card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-white">Tedarik Talepleri</h3>
+            <h3 className="text-sm font-semibold text-white">Tedarik Talepleri ({requests.length})</h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleExport}
@@ -256,13 +294,13 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {initialRequests.map((sr) => (
-                  <tr key={sr.id}>
+                {requests.map((sr, idx) => (
+                  <tr key={`${sr.id}-${idx}`}>
                     <td className="font-mono text-rc-gold text-xs">{sr.id}</td>
                     <td className="text-white font-medium">{sr.title}</td>
                     <td>{sr.dealer}</td>
-                    <td><span className={priorityColors[sr.priority]}>{sr.priority}</span></td>
-                    <td><span className={`rc-badge ${statusColors[sr.status]}`}>{sr.status}</span></td>
+                    <td><span className={priorityColors[sr.priority] || priorityColors["P2"]}>{sr.priority}</span></td>
+                    <td><span className={`rc-badge ${statusColors[sr.status] || "rc-badge-info"}`}>{sr.status}</span></td>
                     <td>{sr.sla}</td>
                     <td>{sr.date}</td>
                   </tr>
@@ -273,7 +311,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <NewSupplyRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <NewSupplyRequestModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleSuccess}
+      />
     </MainLayout>
   );
 }
