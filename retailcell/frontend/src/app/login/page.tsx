@@ -46,7 +46,7 @@ export default function LoginPage() {
     setLoading(true);
 
     setTimeout(() => {
-      // Simulate failed login & lock out logic
+      // 1. Password Check (Mock Security)
       if (password !== "Admin123!") {
         const attemptsStr = localStorage.getItem("rc_failed_attempts") || "0";
         let attempts = parseInt(attemptsStr) + 1;
@@ -65,11 +65,48 @@ export default function LoginPage() {
         return;
       }
 
-      // Simulate successful staff login
+      // 2. Case-based Email to Role Assignment
+      let assignedRole = "DEALER";
+      let assignedName = "Yetkili Personel";
+
+      const mail = email.toLowerCase();
+      switch (true) {
+        case mail.includes("admin"):
+          assignedRole = "ADMIN";
+          assignedName = "Sistem Yöneticisi";
+          break;
+        case mail.includes("uzman"):
+          assignedRole = "EXPERT";
+          assignedName = "Lojistik Uzmanı";
+          break;
+        case mail.includes("analist"):
+          assignedRole = "ANALYST";
+          assignedName = "Stok Analisti";
+          break;
+        case mail.includes("operator"):
+          assignedRole = "OPERATOR";
+          assignedName = "Depo Operatörü";
+          break;
+        case mail.includes("sorumlu"):
+        case mail.includes("manager"):
+          assignedRole = "MANAGER";
+          assignedName = "Bölge Sorumlusu";
+          break;
+        case mail.includes("supervizor"):
+          assignedRole = "SUPERVISOR";
+          assignedName = "Ağ Süpervizörü";
+          break;
+        default:
+          setError("Bu e-posta adresi sistemde bulunamadı. Lütfen atanmış personellerden birini girin (admin, uzman, analist vb.)");
+          setLoading(false);
+          return;
+      }
+
+      // Simulate successful staff login with dynamic role
       localStorage.setItem("rc_failed_attempts", "0");
       localStorage.removeItem("rc_lock_time");
-      localStorage.setItem("rc_token", "staff_mock_token");
-      localStorage.setItem("rc_user", JSON.stringify({ name: "Sistem Yöneticisi", role: "ADMIN", type: "STAFF" }));
+      localStorage.setItem("rc_token", `staff_mock_token_${assignedRole}`);
+      localStorage.setItem("rc_user", JSON.stringify({ name: assignedName, role: assignedRole, type: "STAFF" }));
       router.push("/");
     }, 1000);
   };
