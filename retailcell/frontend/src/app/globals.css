@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+/* ============================================
+   RetailCell - Design System (Stitch Theme)
+   Dark theme with gold accents
+   ============================================ */
+
+@theme {
+  --color-rc-bg-primary: #0D0F12;
+  --color-rc-bg-secondary: #1A1D23;
+  --color-rc-bg-card: #1E2128;
+  --color-rc-bg-sidebar: #14161B;
+  --color-rc-bg-hover: #252830;
+  --color-rc-border: #2A2D35;
+  --color-rc-border-light: #353840;
+  --color-rc-gold: #F5A623;
+  --color-rc-gold-light: #FFBD4F;
+  --color-rc-gold-dark: #D4901E;
+  --color-rc-text-primary: #FFFFFF;
+  --color-rc-text-secondary: #A0A4AB;
+  --color-rc-text-muted: #6B7280;
+  --color-rc-success: #22C55E;
+  --color-rc-danger: #EF4444;
+  --color-rc-warning: #F59E0B;
+  --color-rc-info: #3B82F6;
+}
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+html {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-rc-bg-primary);
+  color: var(--color-rc-text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ---- Scrollbar Styling ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-rc-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-rc-border-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-rc-text-muted);
+}
+
+/* ---- Animations ---- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(245, 166, 35, 0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 2s infinite;
+}
+
+/* ---- Card Styles ---- */
+.rc-card {
+  background: var(--color-rc-bg-card);
+  border: 1px solid var(--color-rc-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.rc-card:hover {
+  border-color: var(--color-rc-border-light);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ---- Metric Card ---- */
+.rc-metric-card {
+  background: var(--color-rc-bg-card);
+  border: 1px solid var(--color-rc-border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.rc-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-rc-gold), var(--color-rc-gold-light));
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.rc-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-rc-gold);
+  box-shadow: 0 8px 24px rgba(245, 166, 35, 0.1);
+}
+
+.rc-metric-card:hover::before {
+  opacity: 1;
+}
+
+/* ---- Button Styles ---- */
+.rc-btn-primary {
+  background: linear-gradient(135deg, var(--color-rc-gold), var(--color-rc-gold-dark));
+  color: #000;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.rc-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(245, 166, 35, 0.3);
+}
+
+/* ---- Sidebar ---- */
+.rc-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  color: var(--color-rc-text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.rc-sidebar-item:hover {
+  background: var(--color-rc-bg-hover);
+  color: var(--color-rc-text-primary);
+}
+
+.rc-sidebar-item.active {
+  background: rgba(245, 166, 35, 0.12);
+  color: var(--color-rc-gold);
+  font-weight: 500;
+}
+
+/* ---- Table ---- */
+.rc-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.rc-table thead th {
+  background: var(--color-rc-bg-secondary);
+  color: var(--color-rc-text-secondary);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-rc-border);
+}
+
+.rc-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.rc-table tbody tr:hover {
+  background: var(--color-rc-bg-hover);
+}
+
+.rc-table tbody td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--color-rc-border);
+  color: var(--color-rc-text-secondary);
+}
+
+/* ---- Status Badges ---- */
+.rc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rc-badge-success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22C55E;
+}
+
+.rc-badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+}
+
+.rc-badge-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+}
+
+.rc-badge-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3B82F6;
+}
+
+.rc-badge-gold {
+  background: rgba(245, 166, 35, 0.15);
+  color: var(--color-rc-gold);
+}
