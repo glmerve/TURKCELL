@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Phone, Mail, ChevronRight, User, AlertCircle, ShieldAlert } from "lucide-react";
 
@@ -75,7 +75,7 @@ export default function LoginPage() {
   };
 
   // Check lockout state on mount
-  useState(() => {
+  useEffect(() => {
     const lockTimeStr = localStorage.getItem("rc_lock_time");
     if (lockTimeStr) {
       const lockTime = parseInt(lockTimeStr);
@@ -88,7 +88,7 @@ export default function LoginPage() {
         localStorage.setItem("rc_failed_attempts", "0");
       }
     }
-  });
+  }, []);
 
   return (
     <div className="min-h-screen bg-rc-bg-primary flex flex-col justify-center items-center p-4 relative overflow-hidden">
