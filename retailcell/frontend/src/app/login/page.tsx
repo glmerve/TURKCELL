@@ -13,6 +13,11 @@ export default function LoginPage() {
   const [staffRole, setStaffRole] = useState("ADMIN");
   
   // Forms State
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [regFullName, setRegFullName] = useState("");
+  const [regGsm, setRegGsm] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  
   const [gsmNumber, setGsmNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState("");
@@ -39,6 +44,29 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Giriş işlemi sırasında bir hata oluştu.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCustomerRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const payload = {
+        full_name: regFullName,
+        gsm_number: regGsm,
+        email: regEmail
+      };
+      await identityApi.registerCustomer(payload);
+      
+      setIsRegisterMode(false);
+      setGsmNumber(regGsm);
+      alert("Kayıt başarılı! Lütfen GSM numaranız ve cihazınıza gelen OTP kodunuzla giriş yapın.");
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || "Kayıt sırasında bir hata oluştu.");
     } finally {
       setLoading(false);
     }
@@ -138,6 +166,66 @@ export default function LoginPage() {
 
           {/* CUSTOMER TAB */}
           {activeTab === "CUSTOMER" && (
+            isRegisterMode ? (
+              <form onSubmit={handleCustomerRegister} className="space-y-4 animate-fade-in">
+                <div>
+                  <label className="text-xs font-medium text-rc-text-secondary block mb-1">Ad Soyad</label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-rc-text-muted" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ahmet Yılmaz"
+                      value={regFullName}
+                      onChange={(e) => setRegFullName(e.target.value)}
+                      className="w-full bg-rc-bg-primary border border-rc-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-rc-gold"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-rc-text-secondary block mb-1">GSM Numarası</label>
+                  <div className="relative">
+                    <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-rc-text-muted" />
+                    <input
+                      type="tel"
+                      required
+                      placeholder="532 123 45 67"
+                      value={regGsm}
+                      onChange={(e) => setRegGsm(e.target.value)}
+                      className="w-full bg-rc-bg-primary border border-rc-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-rc-gold"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-rc-text-secondary block mb-1">E-Posta (Opsiyonel)</label>
+                  <div className="relative">
+                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-rc-text-muted" />
+                    <input
+                      type="email"
+                      placeholder="ahmet@example.com"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      className="w-full bg-rc-bg-primary border border-rc-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-rc-gold"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="rc-btn-primary w-full !py-3 !rounded-xl font-bold flex items-center justify-center gap-2 mt-2"
+                >
+                  {loading ? "Kaydediliyor..." : "Kayıt Ol"}
+                </button>
+                <div className="text-center mt-3">
+                  <p className="text-xs text-rc-text-muted">
+                    Zaten hesabınız var mı?{" "}
+                    <button type="button" onClick={() => { setIsRegisterMode(false); setError(null); }} className="text-rc-gold hover:underline">
+                      Giriş Yapın
+                    </button>
+                  </p>
+                </div>
+              </form>
+            ) : (
             <form onSubmit={handleCustomerLogin} className="space-y-4 animate-fade-in">
               <div>
                 <label className="text-xs font-medium text-rc-text-secondary block mb-1">GSM Numarası</label>
@@ -179,7 +267,17 @@ export default function LoginPage() {
                 {loading ? "Doğrulanıyor..." : "Giriş Yap"}
                 {!loading && <ChevronRight size={16} />}
               </button>
+
+              <div className="text-center mt-4 pt-4 border-t border-rc-border">
+                <p className="text-xs text-rc-text-muted">
+                  Hesabınız yok mu?{" "}
+                  <button type="button" onClick={() => { setIsRegisterMode(true); setError(null); }} className="text-rc-gold hover:underline">
+                    Hemen Kayıt Olun
+                  </button>
+                </p>
+              </div>
             </form>
+            )
           )}
 
           {/* STAFF TAB */}
