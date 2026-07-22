@@ -76,7 +76,7 @@ export default function NewUserModal({ isOpen, onClose, onSuccess }: ModalProps)
         specialties: formData.specialties,
       };
 
-      const response = await identityApi.registerStaff(payload);
+      const response: any = await identityApi.registerStaff(payload);
       
       const newUser = {
         id: response.id || `USR-${Math.floor(1000 + Math.random() * 9000)}`,
