@@ -79,6 +79,32 @@ export default function LoginPage() {
     }
   };
 
+  const handleStaffRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const payload = {
+        full_name: regFullName,
+        email: regEmail,
+        password: password || "Admin123!",
+        role: staffRole,
+        region: "Genel Merkez",
+        specialties: ["Genel"]
+      };
+      await identityApi.registerStaff(payload);
+      
+      setIsStaffRegisterMode(false);
+      setEmail(regEmail);
+      alert("Personel kaydı başarılı! Sistem Yöneticisi onayından sonra giriş yapabilirsiniz.");
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || "Personel kaydı sırasında bir hata oluştu.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleStaffLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
