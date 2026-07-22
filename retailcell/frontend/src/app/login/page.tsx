@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Phone, Mail, ChevronRight, User, AlertCircle, ShieldAlert } from "lucide-react";
+import { identityApi } from "@/services/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,94 +22,56 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [lockedTime, setLockedTime] = useState<number | null>(null);
 
-  const handleCustomerLogin = (e: React.FormEvent) => {
+  const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    setTimeout(() => {
-      if (otp !== "1234") {
-        setError("Hatalı OTP kodu girdiniz. (Simülasyon için: 1234)");
-        setLoading(false);
-        return;
+    try {
+      const response: any = await identityApi.loginCustomer(gsmNumber, otp);
+      if (response && response.access_token) {
+        localStorage.setItem("rc_token", response.access_token);
+        localStorage.setItem("rc_user", JSON.stringify(response.user));
+        router.push("/");
+      } else {
+        setError("Hatalı OTP kodu veya GSM numarası.");
       }
-      
-      // Simulate successful customer login
-      localStorage.setItem("rc_token", "customer_mock_token");
-      localStorage.setItem("rc_user", JSON.stringify({ name: "Müşteri", role: "VIEWER", type: "CUSTOMER" }));
-      router.push("/");
-    }, 1000);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || "Giriş işlemi sırasında bir hata oluştu.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleStaffLogin = (e: React.FormEvent) => {
+  const handleStaffLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    setTimeout(() => {
-      // 1. Password Check (Mock Security)
-      if (password !== "Admin123!") {
-        const attemptsStr = localStorage.getItem("rc_failed_attempts") || "0";
-        let attempts = parseInt(attemptsStr) + 1;
-        
-        if (attempts >= 5) {
-          const lockTime = Date.now() + 15 * 60 * 1000; // 15 mins
-          localStorage.setItem("rc_lock_time", lockTime.toString());
-          setLockedTime(15);
-          setError("Hesabınız güvenlik nedeniyle 15 dakika kilitlenmiştir.");
-        } else {
-          localStorage.setItem("rc_failed_attempts", attempts.toString());
-          setError(`E-posta veya şifre hatalı. Kalan deneme hakkı: ${5 - attempts}`);
-        }
-        
-        setLoading(false);
-        return;
+    try {
+      const response: any = await identityApi.loginStaff(email, password);
+      
+      if (response && response.access_token) {
+        localStorage.setItem("rc_failed_attempts", "0");
+        localStorage.removeItem("rc_lock_time");
+        localStorage.setItem("rc_token", response.access_token);
+        localStorage.setItem("rc_user", JSON.stringify(response.user));
+        router.push("/");
+      } else {
+        setError("E-posta veya şifre hatalı.");
       }
-
-      // 2. Case-based Email to Role Assignment
-      let assignedRole = "DEALER";
-      let assignedName = "Yetkili Personel";
-
-      const mail = email.toLowerCase();
-      switch (true) {
-        case mail.includes("admin"):
-          assignedRole = "ADMIN";
-          assignedName = "Sistem Yöneticisi";
-          break;
-        case mail.includes("uzman"):
-          assignedRole = "EXPERT";
-          assignedName = "Lojistik Uzmanı";
-          break;
-        case mail.includes("analist"):
-          assignedRole = "ANALYST";
-          assignedName = "Stok Analisti";
-          break;
-        case mail.includes("operator"):
-          assignedRole = "OPERATOR";
-          assignedName = "Depo Operatörü";
-          break;
-        case mail.includes("sorumlu"):
-        case mail.includes("manager"):
-          assignedRole = "MANAGER";
-          assignedName = "Bölge Sorumlusu";
-          break;
-        case mail.includes("supervizor"):
-          assignedRole = "SUPERVISOR";
-          assignedName = "Ağ Süpervizörü";
-          break;
-        default:
-          setError("Bu e-posta adresi sistemde bulunamadı. Lütfen atanmış personellerden birini girin (admin, uzman, analist vb.)");
-          setLoading(false);
-          return;
+    } catch (err: any) {
+      // Backend handles lockout and return 423 Locked or 401 Unauthorized
+      const errorMsg = err?.message || err?.response?.data?.detail || "E-posta veya şifre hatalı.";
+      setError(errorMsg);
+      
+      // If the backend returns a specific locked message, we update our UI state
+      if (errorMsg.includes("kilitlenmiştir") || err?.status === 423) {
+        setLockedTime(15);
       }
-
-      // Simulate successful staff login with dynamic role
-      localStorage.setItem("rc_failed_attempts", "0");
-      localStorage.removeItem("rc_lock_time");
-      localStorage.setItem("rc_token", `staff_mock_token_${assignedRole}`);
-      localStorage.setItem("rc_user", JSON.stringify({ name: assignedName, role: assignedRole, type: "STAFF" }));
-      router.push("/");
-    }, 1000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Check lockout state on mount
