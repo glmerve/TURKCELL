@@ -185,11 +185,10 @@ async def register_customer(request: CustomerRegisterRequest, db: AsyncSession =
     "/register/staff",
     response_model=UserBrief,
     status_code=status.HTTP_201_CREATED,
-    summary="Personel Hesabı Oluşturma (Sadece Admin)",
+    summary="Personel Hesabı Oluşturma",
 )
 async def register_staff(
     request: StaffRegisterRequest,
-    current_admin: dict = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(User).where(User.email == request.email))
