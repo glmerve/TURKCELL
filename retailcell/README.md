@@ -18,12 +18,12 @@ RetailCell, mikroservis mimarisi üzerine inşa edilmiş bir platformdur:
 ## 🛠️ Teknoloji Stack
 
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy (async), Pydantic
-- **Frontend:** Next.js 14, React, Recharts, React-Leaflet
-- **Veritabanı:** PostgreSQL 16 (Railway), Redis 7 (cache)
+- **Frontend:** Next.js 14, React, Recharts, Lucide Icons
+- **Veritabanı:** PostgreSQL 16, Redis 7 (cache)
 - **Event Bus:** Apache Kafka / Redis Streams
 - **Auth:** JWT (Access + Refresh Token), bcrypt (Passlib)
 - **AI/ML:** Scikit-Learn, Pandas, NumPy
-- **DevOps:** Docker, Docker Compose, GitHub Actions, Railway
+- **DevOps:** Docker, Docker Compose, GitHub Actions
 
 ## 🚀 Hızlı Başlangıç
 
@@ -81,7 +81,6 @@ retailcell/
 │   └── gamification-service/  # Gamification Servisi
 ├── frontend/                  # Next.js Dashboard
 ├── docker-compose.yml
-├── railway.json
 └── README.md
 ```
 
@@ -109,10 +108,6 @@ cd services/ai-service && pytest tests/ -v
 # Gamification Service testleri
 cd services/gamification-service && pytest tests/ -v
 ```
-
-## 🚂 Railway Deployment
-
-Proje Railway üzerinde multi-service olarak deploy edilir. Her servis kendi Railway servisi olarak çalışır.
 
 ## 📄 Lisans
 

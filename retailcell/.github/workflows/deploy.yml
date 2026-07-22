@@ -1,4 +1,4 @@
-name: RetailCell CI/CD Pipeline
+name: RetailCell CI Pipeline
 
 on:
   push:
@@ -57,26 +57,3 @@ jobs:
         run: |
           cd services/${{ matrix.service }}
           docker build -t retailcell-${{ matrix.service }}:latest .
-
-  deploy:
-    name: Deploy to Railway
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy services
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          echo "🚀 Deploying to Railway..."
-          railway up --service identity-service
-          railway up --service inventory-service
-          railway up --service ai-service
-          railway up --service gamification-service
-          echo "✅ Deployment complete!"
