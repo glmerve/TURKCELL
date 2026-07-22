@@ -32,11 +32,32 @@ async function apiRequest<T>(url: string, options?: RequestInit): Promise<T | nu
 // 🔐 1. IDENTITY SERVICE ENDPOINTS
 // ----------------------------------------------------
 export const identityApi = {
-  // POST /api/v1/auth/login
-  login: (email: string, password: string) =>
-    apiRequest(`${IDENTITY_URL}/api/v1/auth/login`, {
+  // POST /api/v1/auth/login/staff
+  loginStaff: (email: string, password: string) =>
+    apiRequest(`${IDENTITY_URL}/api/v1/auth/login/staff`, {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    }),
+
+  // POST /api/v1/auth/login/customer
+  loginCustomer: (gsm_number: string, otp: string) =>
+    apiRequest(`${IDENTITY_URL}/api/v1/auth/login/customer`, {
+      method: "POST",
+      body: JSON.stringify({ gsm_number, otp }),
+    }),
+
+  // POST /api/v1/auth/register/staff
+  registerStaff: (data: any) =>
+    apiRequest(`${IDENTITY_URL}/api/v1/auth/register/staff`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // POST /api/v1/auth/register/customer
+  registerCustomer: (data: any) =>
+    apiRequest(`${IDENTITY_URL}/api/v1/auth/register/customer`, {
+      method: "POST",
+      body: JSON.stringify(data),
     }),
 
   // GET /api/v1/users/
