@@ -172,7 +172,7 @@ async def register_customer(request: CustomerRegisterRequest, db: AsyncSession =
         hashed_password="NOPASSWORD_OTP_ONLY"
     )
     db.add(user)
-    await db.flush()
+    await db.commit()
     await db.refresh(user)
 
     return UserBrief(
@@ -213,7 +213,7 @@ async def register_staff(
         account_type=AccountType.STAFF
     )
     db.add(user)
-    await db.flush()
+    await db.commit()
     await db.refresh(user)
 
     return UserBrief(
