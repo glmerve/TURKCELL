@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { FileText, Plus, Search, Filter } from "lucide-react";
+import { FileText, Plus, Search, Filter, RefreshCw } from "lucide-react";
 import NewSupplyRequestModal from "@/components/modals/NewSupplyRequestModal";
 
-const requestsData = [
+const initialRequests = [
   { id: "SR-001234", title: "iPhone 15 Pro Max Stok Talebi", dealer: "Kadıköy Ana Mağaza", priority: "P0", status: "İşleniyor", sla: "2.4 Saat Kalan", date: "22 Tem 2025" },
   { id: "SR-001233", title: "Galaxy S24 Ultra Acil Sipariş", dealer: "Kızılay Operasyon", priority: "P1", status: "Onay Bekliyor", sla: "8.1 Saat Kalan", date: "22 Tem 2025" },
   { id: "SR-001232", title: "Airpods Pro 2 Yeniden Sipariş", dealer: "Alsancak Premium", priority: "P2", status: "Kargoda", sla: "24.5 Saat Kalan", date: "21 Tem 2025" },
@@ -24,14 +24,65 @@ const statusColors: Record<string, string> = {
   "Onay Bekliyor": "rc-badge-warning",
   "Kargoda": "rc-badge-gold",
   "Teslim Edildi": "rc-badge-success",
+  "CREATED": "rc-badge-info",
+  "APPROVED": "rc-badge-success",
 };
 
 export default function SupplyRequestsPage() {
+  const [requests, setRequests] = useState(initialRequests);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const filtered = requestsData.filter((r) => {
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:8002/api/v1/supply-requests/");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items && data.items.length > 0) {
+          const formatted = data.items.map((item: any) => ({
+            id: item.request_number || item.id,
+            title: item.title,
+            dealer: item.dealer_name || item.region || "Genel Mağaza",
+            priority: item.priority || "P2",
+            status: item.status || "İşleniyor",
+            sla: "48 Saat Kalan",
+            date: new Date(item.created_at || Date.now()).toLocaleDateString("tr-TR"),
+          }));
+          setRequests([...formatted, ...initialRequests]);
+        }
+      }
+    } catch (err) {
+      console.log("Using cached/local supply requests list");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const handleSuccess = (newReq: any) => {
+    if (newReq) {
+      setRequests((prev) => [
+        {
+          id: newReq.request_number || newReq.id || `SR-${Math.floor(100000 + Math.random() * 900000)}`,
+          title: newReq.title || "Yeni Stok Talebi",
+          dealer: newReq.dealer_name || newReq.dealer || "Kadıköy Ana Mağaza",
+          priority: newReq.priority || "P2",
+          status: newReq.status || "İşleniyor",
+          sla: "48.0 Saat Kalan",
+          date: new Date().toLocaleDateString("tr-TR"),
+        },
+        ...prev,
+      ]);
+    }
+  };
+
+  const filtered = requests.filter((r) => {
     const matchesSearch = r.title.toLowerCase().includes(searchTerm.toLowerCase()) || r.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPriority = !priorityFilter || r.priority === priorityFilter;
     return matchesSearch && matchesPriority;
@@ -50,12 +101,21 @@ export default function SupplyRequestsPage() {
               Bayilerden gelen envanter ikmal talepleri ve durum makinesi geçişleri.
             </p>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="rc-btn-primary flex items-center justify-center gap-2"
-          >
-            <Plus size={16} /> Yeni Talep Oluştur
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchRequests}
+              className="p-2.5 rounded-lg border border-rc-border text-rc-text-secondary hover:text-white transition-colors"
+              title="Yenile"
+            >
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="rc-btn-primary flex items-center justify-center gap-2"
+            >
+              <Plus size={16} /> Yeni Talep Oluştur
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -74,7 +134,7 @@ export default function SupplyRequestsPage() {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="bg-rc-bg-primary border border-rc-border text-rc-text-secondary text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-rc-gold"
+              className="bg-rc-bg-primary border border-rc-border text-rc-text-secondary text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-rc-gold cursor-pointer"
             >
               <option value="">Tüm Öncelikler</option>
               <option value="P0">P0 - Acil</option>
@@ -100,13 +160,13 @@ export default function SupplyRequestsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
-                  <tr key={r.id}>
+                {filtered.map((r, i) => (
+                  <tr key={`${r.id}-${i}`}>
                     <td className="font-mono text-rc-gold text-xs">{r.id}</td>
                     <td className="text-white font-medium">{r.title}</td>
                     <td>{r.dealer}</td>
                     <td><span className={priorityColors[r.priority]}>{r.priority}</span></td>
-                    <td><span className={`rc-badge ${statusColors[r.status]}`}>{r.status}</span></td>
+                    <td><span className={`rc-badge ${statusColors[r.status] || "rc-badge-info"}`}>{r.status}</span></td>
                     <td className="text-xs text-rc-text-secondary">{r.sla}</td>
                     <td>{r.date}</td>
                   </tr>
@@ -117,7 +177,11 @@ export default function SupplyRequestsPage() {
         </div>
       </div>
 
-      <NewSupplyRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <NewSupplyRequestModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleSuccess}
+      />
     </MainLayout>
   );
 }
