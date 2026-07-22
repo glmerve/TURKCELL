@@ -10,6 +10,7 @@ export default function LoginPage() {
   
   // Tab State: "CUSTOMER" or "STAFF"
   const [activeTab, setActiveTab] = useState<"CUSTOMER" | "STAFF">("CUSTOMER");
+  const [staffRole, setStaffRole] = useState("ADMIN");
   
   // Forms State
   const [gsmNumber, setGsmNumber] = useState("");
@@ -183,7 +184,30 @@ export default function LoginPage() {
 
           {/* STAFF TAB */}
           {activeTab === "STAFF" && (
-            <form onSubmit={handleStaffLogin} className="space-y-4 animate-fade-in">
+            <div className="animate-fade-in space-y-4">
+              <div className="flex flex-wrap gap-2 justify-center mb-6">
+                {[
+                  { id: "ADMIN", label: "Yönetici" },
+                  { id: "MANAGER", label: "Sorumlu" },
+                  { id: "EXPERT", label: "Uzman" },
+                  { id: "ANALYST", label: "Analist" },
+                  { id: "OPERATOR", label: "Operatör" }
+                ].map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setStaffRole(r.id)}
+                    className={`px-3 py-1.5 text-[10px] font-bold rounded-full transition-all border ${
+                      staffRole === r.id
+                        ? "bg-rc-gold text-black border-rc-gold shadow-[0_0_10px_rgba(255,215,0,0.3)]"
+                        : "bg-rc-bg-primary text-rc-text-secondary border-rc-border hover:text-white"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+
+              <form onSubmit={handleStaffLogin} className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-rc-text-secondary block mb-1">Kurumsal E-Posta</label>
                 <div className="relative">
@@ -225,6 +249,7 @@ export default function LoginPage() {
                 {!loading && !lockedTime && <ShieldAlert size={16} />}
               </button>
             </form>
+          </div>
           )}
         </div>
       </div>
